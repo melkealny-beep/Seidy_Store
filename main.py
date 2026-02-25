@@ -20,12 +20,10 @@ AI_PROVIDER = os.getenv('AI_PROVIDER', 'gemini')  # gemini أو groq (الافت
 
 # إعداد AI حسب الاختيار
 if AI_PROVIDER.lower() == 'gemini':
-    # إعداد Gemini
     genai.configure(api_key=GEMINI_API_KEY)
     ai_model = genai.GenerativeModel('gemini-2.0-flash-exp')
     logger.info("Using Gemini AI")
 elif AI_PROVIDER.lower() == 'groq':
-    # إعداد Groq
     groq_client = Groq(api_key=GROQ_API_KEY)
     logger.info("Using Groq AI")
 else:
@@ -79,8 +77,6 @@ KNOWLEDGE_BASE = load_knowledge()
 
 # دالة للحصول على رد من AI
 def get_ai_response(user_question):
-    """الحصول على رد من Gemini أو Groq"""
-    
     prompt = f"""أنت مساعد ذكي في محل أحمد الصعيدي للموبايلات واكسسواراتها. 
 المحل متخصص في بيع الآيفونات وجميع أنواع الموبايلات والإكسسوارات الأصلية.
 
@@ -96,33 +92,22 @@ def get_ai_response(user_question):
 
     try:
         if AI_PROVIDER.lower() == 'gemini':
-            # استخدام Gemini
             response = ai_model.generate_content(prompt)
             return response.text
-        
         elif AI_PROVIDER.lower() == 'groq':
-            # استخدام Groq
             chat_completion = groq_client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
+                messages=[{"role": "user", "content": prompt}],
                 model="llama-3.3-70b-versatile",
                 temperature=0.7,
                 max_tokens=1000,
             )
             return chat_completion.choices[0].message.content
-    
     except Exception as e:
         logger.error(f"Error in AI API: {e}")
         return None
 
 # دالة البداية
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """إرسال رسالة الترحيب عند إرسال /start"""
-    
     keyboard = [
         [KeyboardButton("📱 المنتجات"), KeyboardButton("✨ الخدمات")],
         [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("💬 استفسار")],
@@ -144,13 +129,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 أو اكتب سؤالك مباشرة وسأساعدك! 😊
 """
-    
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
 
-# دالة المنتجات
 async def products(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """عرض المنتجات المتوفرة"""
-    
     keyboard = [
         [InlineKeyboardButton("📱 أجهزة آيفون", callback_data='iphones')],
         [InlineKeyboardButton("🤖 أجهزة أندرويد", callback_data='android')],
@@ -159,22 +140,14 @@ async def products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    products_message = """
-📱 منتجاتنا المتميزة:
-
-اختر الفئة التي تهمك:
-"""
+    products_message = "📱 منتجاتنا المتميزة:\n\nاختر الفئة التي تهمك:"
     
     if update.message:
         await update.message.reply_text(products_message, reply_markup=reply_markup)
     else:
         await update.callback_query.edit_message_text(products_message, reply_markup=reply_markup)
 
-# دالة الخدمات
 async def services(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """عرض الخدمات المتوفرة"""
-    
     keyboard = [
         [InlineKeyboardButton("🔧 الصيانة", callback_data='maintenance')],
         [InlineKeyboardButton("📲 استبدال الشاشات", callback_data='screen_replacement')],
@@ -183,58 +156,32 @@ async def services(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    services_message = """
-✨ خدماتنا المميزة:
-
-نقدم لك أفضل الخدمات لجهازك:
-"""
+    services_message = "✨ خدماتنا المميزة:\n\nنقدم لك أفضل الخدمات لجهازك:"
     
     if update.message:
         await update.message.reply_text(services_message, reply_markup=reply_markup)
     else:
         await update.callback_query.edit_message_text(services_message, reply_markup=reply_markup)
 
-# دالة الموقع والتواصل
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """عرض معلومات الموقع والتواصل"""
-    
-    keyboard = [
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
-    ]
+    keyboard = [[InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
     location_message = """
 📍 موقعنا ومعلومات التواصل:
 
 📍 العنوان: [يرجى إضافة العنوان الفعلي هنا]
-
 📞 رقم التواصل: [رقم الهاتف]
-
-⏰ أوقات العمل:
-   من السبت إلى الخميس
-   من 10 صباحاً حتى 10 مساءً
-   
-🚗 كيفية الوصول:
-   [تفاصيل الوصول إلى المحل]
-
+⏰ أوقات العمل: من السبت إلى الخميس - من 10 صباحاً حتى 10 مساءً
 📱 يمكنك أيضاً التواصل معنا عبر هذا البوت في أي وقت!
 """
-    
     if update.message:
         await update.message.reply_text(location_message, reply_markup=reply_markup)
     else:
         await update.callback_query.edit_message_text(location_message, reply_markup=reply_markup)
 
-# دالة معلومات عن المحل
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """عرض معلومات عن المحل"""
-    
-    keyboard = [
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
-    ]
+    keyboard = [[InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
     about_message = """
 ℹ️ عن محل أحمد الصعيدي:
 
@@ -249,104 +196,54 @@ async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
    ✅ أسعار منافسة
    ✅ ضمان على جميع المنتجات
    ✅ خدمة عملاء ممتازة
-   ✅ صيانة فورية
-   ✅ فحص شامل قبل البيع
-
-🎯 رسالتنا:
-   تقديم أفضل تجربة شراء للعملاء مع ضمان الجودة والسعر المناسب
-
-🌟 رؤيتنا:
-   أن نكون الخيار الأول لكل من يبحث عن الآيفون والإكسسوارات الأصلية
 """
-    
     if update.message:
         await update.message.reply_text(about_message, reply_markup=reply_markup)
     else:
         await update.callback_query.edit_message_text(about_message, reply_markup=reply_markup)
 
-# دالة الاستفسار
 async def inquiry_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """بدء محادثة الاستفسار"""
-    
     inquiry_message = """
 💬 مرحباً! أنا مساعدك الذكي في محل أحمد الصعيدي
 
-يمكنك سؤالي عن:
-• أسعار الأجهزة
-• مواصفات معينة
-• توفر منتج
-• خدمات الصيانة
-• أي استفسار آخر
-
 اكتب سؤالك الآن وسأجيبك فوراً! 😊
-
 لإلغاء الاستفسار، اكتب /cancel
 """
-    
     await update.message.reply_text(inquiry_message)
     return WAITING_FOR_QUESTION
 
-# دالة معالجة الأسئلة
 async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """معالجة أسئلة المستخدم باستخدام AI"""
-    
     user_question = update.message.text
-    
-    # إرسال رسالة انتظار
     waiting_msg = await update.message.reply_text("⏳ جاري البحث عن إجابة لسؤالك...")
     
     try:
-        # الحصول على رد من AI
         answer = get_ai_response(user_question)
+        await waiting_msg.delete()
         
         if answer:
-            # حذف رسالة الانتظار
-            await waiting_msg.delete()
-            
-            # إرسال الإجابة
             await update.message.reply_text(answer)
-            
-            # عرض خيارات المتابعة
             keyboard = [
                 [KeyboardButton("💬 استفسار آخر"), KeyboardButton("📱 المنتجات")],
                 [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("🔙 القائمة الرئيسية")]
             ]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-            
-            await update.message.reply_text(
-                "هل تريد المساعدة في شيء آخر؟ 😊",
-                reply_markup=reply_markup
-            )
+            await update.message.reply_text("هل تريد المساعدة في شيء آخر؟ 😊", reply_markup=reply_markup)
         else:
-            await waiting_msg.delete()
-            await update.message.reply_text(
-                "❌ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة."
-            )
-        
+            await update.message.reply_text("❌ عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.")
     except Exception as e:
         logger.error(f"Error handling question: {e}")
         await waiting_msg.delete()
-        await update.message.reply_text(
-            "❌ عذراً، حدث خطأ أثناء معالجة سؤالك. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة."
-        )
+        await update.message.reply_text("❌ عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.")
     
     return ConversationHandler.END
 
-# دالة إلغاء الاستفسار
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """إلغاء محادثة الاستفسار"""
-    await update.message.reply_text(
-        "تم إلغاء الاستفسار. يمكنك العودة للقائمة الرئيسية. 👍"
-    )
+    await update.message.reply_text("تم إلغاء الاستفسار. يمكنك العودة للقائمة الرئيسية. 👍")
     return ConversationHandler.END
 
-# معالج الأزرار الداخلية
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """معالجة الأزرار الداخلية"""
-    
     query = update.callback_query
     await query.answer()
-    
     data = query.data
     
     if data == 'main_menu':
@@ -364,23 +261,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 📱 أجهزة الآيفون المتوفرة:
 
 🌟 آيفون 16 Pro Max - أحدث إصدار
-🌟 آيفون 16 Pro
-🌟 آيفون 16 Plus
-🌟 آيفون 16
-🌟 آيفون 15 Pro Max
-🌟 آيفون 15 Pro
-🌟 آيفون 15 Plus
-🌟 آيفون 15
-🌟 آيفون 14 Pro Max
-🌟 وجميع الإصدارات السابقة
+🌟 آيفون 16 Pro / 16 Plus / 16
+🌟 آيفون 15 Pro Max / 15 Pro / 15
+🌟 آيفون 14 Pro Max وجميع الإصدارات السابقة
 
-✨ جميع الأجهزة:
-• مفحوصة بالكامل
-• بضمان موثوق
-• أسعار منافسة
-• إمكانية التقسيط
-
-💬 للاستفسار عن الأسعار والتوفر، اضغط "استفسار"
+✨ جميع الأجهزة مفحوصة بضمان موثوق وأسعار منافسة
+💬 للاستفسار عن الأسعار، اضغط "استفسار"
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='products')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -389,24 +275,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 🤖 أجهزة الأندرويد المتوفرة:
 
-📱 Samsung Galaxy Series:
-   • S24 Ultra
-   • S24+
-   • S24
-   • A Series
-
-📱 Xiaomi:
-   • Redmi Note Series
-   • Poco Series
-   • Mi Series
-
+📱 Samsung Galaxy S24 Series
+📱 Xiaomi / Redmi / Poco
 📱 OPPO & Realme
-📱 OnePlus
-📱 وماركات عالمية أخرى
+📱 OnePlus وماركات أخرى
 
 ✨ جميع الأجهزة بضمان وبأسعار مميزة
-
-💬 للاستفسار عن الأسعار والتوفر، اضغط "استفسار"
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='products')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -415,27 +289,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 🎧 إكسسوارات الموبايل:
 
-🎧 سماعات:
-   • AirPods Pro
-   • AirPods (2nd & 3rd Gen)
-   • سماعات لاسلكية متنوعة
-
-⌚ ساعات ذكية:
-   • Apple Watch Series 9
-   • Apple Watch SE
-   • ساعات سامسونج الذكية
-
-📱 جرابات وحماية:
-   • جرابات آيفون أصلية
-   • واقيات شاشة زجاجية
-   • جرابات مقاومة للصدمات
-
-💼 حقائب وحوامل
+🎧 AirPods Pro / AirPods 2nd & 3rd Gen
+⌚ Apple Watch / Samsung Watch
+📱 جرابات وواقيات شاشة
 🔊 سماعات بلوتوث
 
 ✨ جميع المنتجات أصلية 100%
-
-💬 للاستفسار عن الأسعار، اضغط "استفسار"
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='products')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -444,26 +303,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 🔌 شواحن وكوابل:
 
-⚡ شواحن سريعة:
-   • شواحن آبل الأصلية
-   • شواحن USB-C PD
-   • شواحن لاسلكية MagSafe
-   • شواحن متعددة المنافذ
-
-🔌 كوابل:
-   • كوابل Lightning أصلية
-   • كوابل USB-C to Lightning
-   • كوابل Type-C
-   • بأطوال مختلفة (1م، 2م، 3م)
-
-🔋 بنوك طاقة (Power Banks):
-   • سعات مختلفة
-   • دعم الشحن السريع
-   • ماركات معتمدة
+⚡ شواحن آبل الأصلية / MagSafe
+🔌 كوابل Lightning / USB-C
+🔋 بنوك طاقة بسعات مختلفة
 
 ✨ جميع المنتجات أصلية ومعتمدة
-
-💬 للاستفسار عن الأسعار، اضغط "استفسار"
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='products')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -472,20 +316,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 🔧 خدمات الصيانة:
 
-🛠️ نقدم صيانة احترافية لجميع أنواع الموبايلات:
-
 ✅ استبدال الشاشات
 ✅ إصلاح البطاريات
-✅ إصلاح الأزرار
 ✅ حل مشاكل الشحن
 ✅ إصلاح السماعات والمايكروفون
 ✅ حل مشاكل السوفتوير
 ✅ تنظيف الجهاز من الداخل
 
 ⏱️ صيانة فورية في معظم الحالات
-💯 ضمان على جميع قطع الغيار
-
-📞 تواصل معنا للحجز
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='services')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -494,21 +332,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 📲 استبدال الشاشات:
 
-✨ خدمة استبدال الشاشات الاحترافية:
-
-📱 نستبدل شاشات:
-   • جميع إصدارات الآيفون
-   • أجهزة السامسونج
-   • جميع أنواع الأندرويد
-
-🌟 مميزات الخدمة:
-   ✅ شاشات أصلية عالية الجودة
-   ✅ استبدال فوري (30-60 دقيقة)
-   ✅ ضمان 3-6 أشهر
-   ✅ فحص كامل بعد التركيب
-   ✅ أسعار منافسة
-
-⚠️ ننصح بالاستبدال الفوري عند تشقق الشاشة لحماية الجهاز
+✅ شاشات أصلية عالية الجودة
+✅ استبدال فوري (30-60 دقيقة)
+✅ ضمان 3-6 أشهر
+✅ فحص كامل بعد التركيب
+✅ أسعار منافسة
 
 📞 احجز موعدك الآن!
 """
@@ -519,27 +347,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 🔍 خدمة الفحص الشامل:
 
-📋 فحص كامل ودقيق لجهازك:
-
-✅ ما نفحصه:
-   • الشاشة والتاتش
-   • البطارية وسعتها
-   • الكاميرات الأمامية والخلفية
-   • السماعات والمايكروفون
-   • أزرار الجهاز
-   • منافذ الشحن
-   • Face ID / Touch ID
-   • الواي فاي والبلوتوث
-   • GPS والشبكة
-   • حالة الجهاز الداخلية
-
-📊 تحصل على:
-   • تقرير مفصل عن حالة الجهاز
-   • توصيات للإصلاح إن لزم
-   • تقييم سعر الجهاز
+✅ فحص الشاشة والبطارية والكاميرات
+✅ فحص السماعات والمايكروفون
+✅ فحص Face ID / Touch ID
+✅ فحص الواي فاي والبلوتوث
 
 💰 الخدمة مجانية عند الشراء من عندنا!
-
 ⏱️ مدة الفحص: 15-20 دقيقة
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='services')]]
@@ -549,37 +362,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = """
 💯 سياسة الضمان:
 
-🛡️ نحن نضمن لك:
+📱 الأجهزة الجديدة: ضمان المصنع الأصلي
+📱 الأجهزة المستعملة: ضمان 3-6 أشهر
+🔧 الشاشات والبطاريات: 3 أشهر
+🎧 السماعات: 6 أشهر
+🔌 الشواحن الأصلية: سنة
 
-📱 ضمان الأجهزة:
-   • الأجهزة الجديدة: ضمان المصنع الأصلي
-   • الأجهزة المستعملة: ضمان 3-6 أشهر
-   • تغطية شاملة للعيوب المصنعية
-
-🔧 ضمان الصيانة:
-   • 3 أشهر على الشاشات
-   • 3 أشهر على البطاريات
-   • شهر على باقي قطع الغيار
-
-🎧 ضمان الإكسسوارات:
-   • 6 أشهر على السماعات
-   • سنة على الشواحن الأصلية
-   • 3 أشهر على الجرابات
-
-⚠️ شروط الضمان:
-   ✅ عدم كسر الجهاز أو تعريضه للماء
-   ✅ عدم فتح الجهاز من مكان آخر
-   ✅ إحضار فاتورة الشراء
-
-✨ نحن نثق بجودة منتجاتنا ونضمنها لك!
+✨ نثق بجودة منتجاتنا ونضمنها لك!
 """
         keyboard = [[InlineKeyboardButton("🔙 رجوع", callback_data='services')]]
         await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
 
-# معالج الرسائل النصية العادية
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """معالجة الرسائل النصية من القائمة الرئيسية"""
-    
     text = update.message.text
     
     if text == "📱 المنتجات":
@@ -595,24 +389,17 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "🔙 القائمة الرئيسية":
         await start(update, context)
     else:
-        # إذا كان نص حر، استخدم AI للإجابة
         await handle_question(update, context)
 
-# دالة معالجة الأخطاء
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """معالجة الأخطاء"""
     logger.error(f"Exception while handling an update: {context.error}")
 
 def main():
-    """تشغيل البوت"""
-    
     # إنشاء التطبيق
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # إضافة معالجات الأوامر
     application.add_handler(CommandHandler("start", start))
     
-    # معالج المحادثة للاستفسارات
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^💬 استفسار|💬 استفسار آخر$"), inquiry_start)],
         states={
@@ -622,17 +409,10 @@ def main():
     )
     
     application.add_handler(conv_handler)
-    
-    # معالج الأزرار الداخلية
     application.add_handler(CallbackQueryHandler(button_handler))
-    
-    # معالج الرسائل النصية
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
-    
-    # معالج الأخطاء
     application.add_error_handler(error_handler)
     
-    # تشغيل البوت
     logger.info(f"Bot is starting with {AI_PROVIDER.upper()} AI...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
