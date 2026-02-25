@@ -5,10 +5,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 import google.generativeai as genai
 from groq import Groq
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -28,76 +25,40 @@ else:
 
 WAITING_FOR_QUESTION = 1
 
-def load_knowledge():
-    try:
-        with open('Knowledge.txt', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return """
-محل الصعيدي ستور للموبايلات واكسسواراتها
-
-🏪 نبذة عن المحل:
-محل متخصص في بيع الموبايلات وخاصة الايفونات بجميع أنواعها، بالإضافة إلى جميع الإكسسوارات الأصلية والمضمونة.
+KNOWLEDGE_BASE = """
+محل الصعيدي ستور للموبايلات
 
 📍 العنوان: شارع الجيش، مركز شربين، الدقهلية، مصر
+📞 هاتف وواتساب: 01014668055
+📘 فيسبوك: https://www.facebook.com/share/1Zqrym8MVD/
+📸 انستجرام: https://www.instagram.com/elsiedy__store (@elsiedy__store)
+🎵 تيك توك: https://www.tiktok.com/@elsiedy_store (@elsiedy_store)
+⏰ متاح دائماً
 
-📞 رقم التواصل: 01014668055
-📱 واتساب: 01014668055
-
-🌐 تابعونا على السوشيال ميديا:
-• فيسبوك: https://www.facebook.com/share/1Zqrym8MVD/
-• انستجرام: https://www.instagram.com/elsiedy__store
-• تيك توك: https://www.tiktok.com/@elsiedy_store
-
-⏰ أوقات العمل: متاح دائماً (Always Open)
-
-📱 منتجاتنا:
-- أجهزة آيفون (جديدة ومستعملة نظيفة)
-- أجهزة أندرويد بجميع الماركات
-- إكسسوارات آيفون أصلية
-- شواحن وكوابل معتمدة
-- جرابات وواقيات شاشة
-- سماعات AirPods
-- ساعات آبل ووتش
-
-✨ خدماتنا:
-- ضمان على جميع المنتجات
-- صيانة فورية
-- استبدال الشاشات
-- تنظيف الأجهزة
-- فحص شامل قبل البيع
-- أسعار منافسة
-
-💯 نضمن لك:
-- أسعار مناسبة للجميع
-- جودة عالية
-- خدمة عملاء ممتازة
-- ضمان موثوق
+المنتجات: آيفون جديد ومستعمل، أندرويد، AirPods، Apple Watch، جرابات، شواحن، كوابل، واقيات شاشة
+الخدمات: صيانة فورية، استبدال شاشات، إصلاح بطاريات، فحص شامل، ضمان على الجميع
 """
 
-KNOWLEDGE_BASE = load_knowledge()
-
 def get_ai_response(user_question):
-    prompt = f"""أنت مساعد ذكي في محل الصعيدي ستور للموبايلات واكسسواراتها.
-المحل متخصص في بيع الآيفونات وجميع أنواع الموبايلات والإكسسوارات الأصلية.
+    prompt = f"""أنت "أحمد الصعيدي" صاحب محل الصعيدي ستور للموبايلات في شربين، الدقهلية.
+
+بتكلم عملاءك بأسلوب ودي ومريح، زي ما صاحبك بيكلمك. مش روبوت ومش رسمي أوي.
+بتحب تساعد الناس وعندك خبرة كبيرة في الموبايلات.
+لما حد يسألك عن سعر قوله إنك هتبعته أحسن سعر في المنطقة وابعثه على الواتساب.
+لما حد يسألك عن منتج معين، اهتم بيه وجاوبه بالتفصيل.
 
 معلومات المحل:
 {KNOWLEDGE_BASE}
 
-بيانات التواصل:
-- 📞 هاتف وواتساب: 01014668055
-- 📍 العنوان: شارع الجيش، مركز شربين، الدقهلية، مصر
-- 📘 فيسبوك: https://www.facebook.com/share/1Zqrym8MVD/
-- 📸 انستجرام: https://www.instagram.com/elsiedy__store
-- 🎵 تيك توك: https://www.tiktok.com/@elsiedy_store
-
 سؤال العميل: {user_question}
 
-يرجى الإجابة على السؤال بشكل احترافي ومفيد.
-إذا سأل عن التواصل أو الموقع، أعطه المعلومات الكاملة.
-استخدم الرموز التعبيرية (emojis) بشكل مناسب.
-كن ودوداً ومحترفاً.
-الرد باللغة العربية فقط."""
+قواعد الرد:
+- اتكلم بالعربي العامية المصرية الطبيعية
+- ابدأ بتحية أو جملة ودية لو مناسب
+- الرد يكون قصير ومفيد، مش خطبة
+- استخدم emojis بس مش كتير
+- لو سأل عن سعر: قوله "تعالى على الواتساب هنتفاهم" مع الرقم
+- لو سأل عن حاجة مش عندنا: اعتذر بلطف واقترح البديل"""
 
     try:
         if AI_PROVIDER.lower() == 'gemini':
@@ -107,30 +68,33 @@ def get_ai_response(user_question):
             chat_completion = groq_client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-3.3-70b-versatile",
-                temperature=0.7,
-                max_tokens=1000,
+                temperature=0.85,
+                max_tokens=500,
             )
             return chat_completion.choices[0].message.content
     except Exception as e:
         logger.error(f"Error in AI API: {e}")
         return None
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# ===== الكيبورد الرئيسي =====
+def main_keyboard():
     keyboard = [
         [KeyboardButton("📱 المنتجات"), KeyboardButton("✨ الخدمات")],
         [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("💬 استفسار")],
         [KeyboardButton("ℹ️ عن المحل")]
     ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    welcome_message = """
-🌟 أهلاً وسهلاً بك في الصعيدي ستور 🌟
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
-📱 متخصصون في الآيفونات والإكسسوارات الأصلية
-📍 شربين، الدقهلية
+# ===== الأوامر =====
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_name = update.effective_user.first_name or "صديقي"
+    welcome_message = f"""أهلاً {user_name}! 🌟
 
-يمكنك الاختيار من القائمة أدناه أو اكتب سؤالك مباشرة 😊
-"""
-    await update.message.reply_text(welcome_message, reply_markup=reply_markup)
+أنا أحمد الصعيدي، يسعدني أخدمك 😊
+عندنا كل إللي تحتاجه من موبايلات وإكسسوارات بأفضل سعر في شربين!
+
+اختار من القايمة أو اكتبلي سؤالك مباشرة 👇"""
+    await update.message.reply_text(welcome_message, reply_markup=main_keyboard())
 
 async def products(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -138,281 +102,255 @@ async def products(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🤖 أجهزة أندرويد", callback_data='android')],
         [InlineKeyboardButton("🎧 إكسسوارات", callback_data='accessories')],
         [InlineKeyboardButton("🔌 شواحن وكوابل", callback_data='chargers')],
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    products_message = "📱 منتجاتنا المتميزة:\n\nاختر الفئة التي تهمك:"
+    msg = "📱 إيه اللي بتدور عليه؟"
     if update.message:
-        await update.message.reply_text(products_message, reply_markup=reply_markup)
+        await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        await update.callback_query.edit_message_text(products_message, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def services(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("🔧 الصيانة", callback_data='maintenance')],
-        [InlineKeyboardButton("📲 استبدال الشاشات", callback_data='screen_replacement')],
-        [InlineKeyboardButton("🔍 الفحص الشامل", callback_data='full_check')],
+        [InlineKeyboardButton("🔧 صيانة", callback_data='maintenance')],
+        [InlineKeyboardButton("📲 استبدال شاشات", callback_data='screen_replacement')],
+        [InlineKeyboardButton("🔍 فحص شامل", callback_data='full_check')],
         [InlineKeyboardButton("💯 الضمان", callback_data='warranty')],
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    services_message = "✨ خدماتنا المميزة:\n\nنقدم لك أفضل الخدمات لجهازك:"
+    msg = "✨ إيه الخدمة اللي محتاجها؟"
     if update.message:
-        await update.message.reply_text(services_message, reply_markup=reply_markup)
+        await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        await update.callback_query.edit_message_text(services_message, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("💬 واتساب", url='https://wa.me/201014668055')],
-        [InlineKeyboardButton("📘 فيسبوك", url='https://www.facebook.com/share/1Zqrym8MVD/')],
-        [InlineKeyboardButton("📸 انستجرام", url='https://www.instagram.com/elsiedy__store')],
-        [InlineKeyboardButton("🎵 تيك توك", url='https://www.tiktok.com/@elsiedy_store')],
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
+        [InlineKeyboardButton("💬 واتساب", url='https://wa.me/201014668055'),
+         InlineKeyboardButton("📘 فيسبوك", url='https://www.facebook.com/share/1Zqrym8MVD/')],
+        [InlineKeyboardButton("📸 انستجرام", url='https://www.instagram.com/elsiedy__store'),
+         InlineKeyboardButton("🎵 تيك توك", url='https://www.tiktok.com/@elsiedy_store')],
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    location_message = """
-📍 موقعنا ومعلومات التواصل:
+    msg = """📍 شارع الجيش، مركز شربين، الدقهلية
 
-📍 العنوان: شارع الجيش، مركز شربين، الدقهلية، مصر
-
-📞 هاتف: 01014668055
-📱 واتساب: 01014668055
-
-🌐 تابعونا على السوشيال ميديا:
-📘 فيسبوك | 📸 انستجرام | 🎵 تيك توك
-
-⏰ أوقات العمل: متاح دائماً 24/7
-"""
+📞 01014668055
+⏰ متاح دايماً، أي وقت كلمنا! 😊"""
     if update.message:
-        await update.message.reply_text(location_message, reply_markup=reply_markup)
+        await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        await update.callback_query.edit_message_text(location_message, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("💬 واتساب", url='https://wa.me/201014668055')],
-        [InlineKeyboardButton("🔙 القائمة الرئيسية", callback_data='main_menu')]
+        [InlineKeyboardButton("💬 واتساب", url='https://wa.me/201014668055'),
+         InlineKeyboardButton("📘 فيسبوك", url='https://www.facebook.com/share/1Zqrym8MVD/')],
+        [InlineKeyboardButton("📸 انستجرام", url='https://www.instagram.com/elsiedy__store'),
+         InlineKeyboardButton("🎵 تيك توك", url='https://www.tiktok.com/@elsiedy_store')],
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    about_message = """
-ℹ️ عن الصعيدي ستور:
+    msg = """🏪 الصعيدي ستور
 
-🏪 متخصصون في:
-   • بيع أجهزة الآيفون بجميع إصداراتها
-   • الإكسسوارات الأصلية المعتمدة
-   • خدمات الصيانة والدعم الفني
+أنا أحمد الصعيدي، بشتغل في الموبايلات من سنين وهدفي إن كل عميل يمشي من عندي مبسوط 😊
 
-📍 شارع الجيش، شربين، الدقهلية
-📞 01014668055
-⏰ متاح دائماً
+بنقدم:
+✅ آيفون وأندرويد بأحسن سعر
+✅ إكسسوارات أصلية مضمونة
+✅ صيانة فورية باليد الأمينة
+✅ ضمان على كل حاجة
 
-🌐 تابعونا:
-📘 فيسبوك | 📸 @elsiedy__store | 🎵 @elsiedy_store
-
-💪 نقاط قوتنا:
-   ✅ أسعار منافسة
-   ✅ ضمان على جميع المنتجات
-   ✅ خدمة عملاء ممتازة
-   ✅ صيانة فورية
-"""
+📍 شربين، الدقهلية
+📞 01014668055"""
     if update.message:
-        await update.message.reply_text(about_message, reply_markup=reply_markup)
+        await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
     else:
-        await update.callback_query.edit_message_text(about_message, reply_markup=reply_markup)
+        await update.callback_query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def inquiry_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    inquiry_message = """
-💬 مرحباً! أنا مساعدك الذكي في الصعيدي ستور
-
-اكتب سؤالك الآن وسأجيبك فوراً! 😊
-لإلغاء الاستفسار، اكتب /cancel
-"""
-    await update.message.reply_text(inquiry_message)
+    await update.message.reply_text("تفضل اسألني على أي حاجة، أنا هنا! 😊")
     return WAITING_FOR_QUESTION
 
 async def handle_question(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_question = update.message.text
-    waiting_msg = await update.message.reply_text("⏳ جاري البحث عن إجابة لسؤالك...")
+    waiting_msg = await update.message.reply_text("ثانية بفكر معاك... ⏳")
     try:
         answer = get_ai_response(user_question)
         await waiting_msg.delete()
         if answer:
             await update.message.reply_text(answer)
             keyboard = [
-                [KeyboardButton("💬 استفسار آخر"), KeyboardButton("📱 المنتجات")],
-                [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("🔙 القائمة الرئيسية")]
+                [KeyboardButton("💬 سؤال تاني"), KeyboardButton("📱 المنتجات")],
+                [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("🏠 الرئيسية")]
             ]
-            reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-            await update.message.reply_text("هل تريد المساعدة في شيء آخر؟ 😊", reply_markup=reply_markup)
+            await update.message.reply_text(
+                "في حاجة تانية؟ 😊",
+                reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+            )
         else:
-            await update.message.reply_text("❌ عذراً، حدث خطأ. تواصل معنا على واتساب: 01014668055")
+            await update.message.reply_text("معلش حصل مشكلة، كلمني على الواتساب مباشرة: 01014668055 📞")
     except Exception as e:
-        logger.error(f"Error handling question: {e}")
+        logger.error(f"Error: {e}")
         await waiting_msg.delete()
-        await update.message.reply_text("❌ عذراً، حدث خطأ. تواصل معنا على واتساب: 01014668055")
+        await update.message.reply_text("معلش حصل مشكلة، كلمني على الواتساب: 01014668055 📞")
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("تم إلغاء الاستفسار. يمكنك العودة للقائمة الرئيسية. 👍")
+    await update.message.reply_text("تمام! لو احتجتني أنا هنا 😊", reply_markup=main_keyboard())
     return ConversationHandler.END
+
+# ===== زرار الرجوع - ده اللي كان ناقص =====
+def back_to_products():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 رجوع للمنتجات", callback_data='back_products')]
+    ])
+
+def back_to_services():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 رجوع للخدمات", callback_data='back_services')]
+    ])
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
 
-    if data == 'main_menu':
+    # ===== زرار رجوع =====
+    if data == 'back_products':
         keyboard = [
-            [KeyboardButton("📱 المنتجات"), KeyboardButton("✨ الخدمات")],
-            [KeyboardButton("📍 الموقع والتواصل"), KeyboardButton("💬 استفسار")],
-            [KeyboardButton("ℹ️ عن المحل")]
+            [InlineKeyboardButton("📱 أجهزة آيفون", callback_data='iphones')],
+            [InlineKeyboardButton("🤖 أجهزة أندرويد", callback_data='android')],
+            [InlineKeyboardButton("🎧 إكسسوارات", callback_data='accessories')],
+            [InlineKeyboardButton("🔌 شواحن وكوابل", callback_data='chargers')],
         ]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await query.edit_message_text("اختر من القائمة الرئيسية:")
-        await query.message.reply_text("اختر ما تريد:", reply_markup=reply_markup)
+        await query.edit_message_text("📱 إيه اللي بتدور عليه؟", reply_markup=InlineKeyboardMarkup(keyboard))
 
+    elif data == 'back_services':
+        keyboard = [
+            [InlineKeyboardButton("🔧 صيانة", callback_data='maintenance')],
+            [InlineKeyboardButton("📲 استبدال شاشات", callback_data='screen_replacement')],
+            [InlineKeyboardButton("🔍 فحص شامل", callback_data='full_check')],
+            [InlineKeyboardButton("💯 الضمان", callback_data='warranty')],
+        ]
+        await query.edit_message_text("✨ إيه الخدمة اللي محتاجها؟", reply_markup=InlineKeyboardMarkup(keyboard))
+
+    # ===== المنتجات =====
     elif data == 'iphones':
-        message = """
-📱 أجهزة الآيفون المتوفرة:
+        msg = """📱 الآيفون عندنا:
 
-🌟 آيفون 16 Pro Max / 16 Pro / 16 Plus / 16
-🌟 آيفون 15 Pro Max / 15 Pro / 15 Plus / 15
-🌟 آيفون 14 Pro Max وجميع الإصدارات السابقة
+🌟 16 Pro Max / Pro / Plus / 16
+🌟 15 Pro Max / Pro / Plus / 15
+🌟 14 Series وكل الإصدارات
 
-✨ جميع الأجهزة مفحوصة بضمان موثوق
-📞 للسعر والتوفر: 01014668055
-"""
+كل جهاز مفحوص كويس وعليه ضمان 💪
+عايز تعرف السعر؟ كلمني على الواتساب وهنتفاهم 😊"""
         keyboard = [
-            [InlineKeyboardButton("💬 واتساب للسعر", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='products')]
+            [InlineKeyboardButton("💬 اسأل عن السعر", url='https://wa.me/201014668055')],
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_products')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'android':
-        message = """
-🤖 أجهزة الأندرويد المتوفرة:
+        msg = """🤖 الأندرويد عندنا:
 
-📱 Samsung Galaxy S Series / A Series
+📱 Samsung Galaxy (S Series / A Series)
 📱 Xiaomi / Redmi / Poco
-📱 OPPO & Realme
-📱 OnePlus وماركات أخرى
+📱 OPPO / Realme / OnePlus
 
-✨ جميع الأجهزة بضمان وأسعار مميزة
-📞 للسعر والتوفر: 01014668055
-"""
+كلهم بضمان وأسعار تنافسية 🔥"""
         keyboard = [
-            [InlineKeyboardButton("💬 واتساب للسعر", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='products')]
+            [InlineKeyboardButton("💬 اسأل عن السعر", url='https://wa.me/201014668055')],
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_products')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'accessories':
-        message = """
-🎧 إكسسوارات الموبايل:
+        msg = """🎧 الإكسسوارات عندنا:
 
-🎧 AirPods Pro / AirPods 2nd & 3rd Gen
+🎧 AirPods Pro / الجيل التاني والتالت
 ⌚ Apple Watch / Samsung Watch
 📱 جرابات وواقيات شاشة أصلية
-🔊 سماعات بلوتوث
+🔊 سماعات بلوتوث متنوعة
 
-✨ جميع المنتجات أصلية 100%
-"""
+كلها أصلية ومضمونة ✅"""
         keyboard = [
-            [InlineKeyboardButton("💬 واتساب للسعر", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='products')]
+            [InlineKeyboardButton("💬 اسأل عن السعر", url='https://wa.me/201014668055')],
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_products')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'chargers':
-        message = """
-🔌 شواحن وكوابل:
+        msg = """🔌 الشواحن والكوابل:
 
-⚡ شواحن آبل الأصلية / MagSafe
-🔌 كوابل Lightning / USB-C
-🔋 بنوك طاقة بسعات مختلفة
+⚡ شواحن آبل أصلية وMagSafe
+🔌 كوابل Lightning وUSB-C بأطوال مختلفة
+🔋 بنوك طاقة بكل الأحجام
 
-✨ جميع المنتجات أصلية ومعتمدة
-"""
+كلها معتمدة وبتشحن صح 💯"""
         keyboard = [
-            [InlineKeyboardButton("💬 واتساب للسعر", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='products')]
+            [InlineKeyboardButton("💬 اسأل عن السعر", url='https://wa.me/201014668055')],
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_products')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
+    # ===== الخدمات =====
     elif data == 'maintenance':
-        message = """
-🔧 خدمات الصيانة:
+        msg = """🔧 الصيانة عندنا:
 
-✅ استبدال الشاشات
-✅ إصلاح البطاريات
-✅ حل مشاكل الشحن
-✅ إصلاح السماعات والمايكروفون
-✅ حل مشاكل السوفتوير
-✅ تنظيف الجهاز من الداخل
+✅ استبدال شاشات
+✅ بطاريات جديدة
+✅ مشاكل الشحن
+✅ سماعات ومايكروفون
+✅ مشاكل السوفتوير
+✅ تنظيف الجهاز
 
-⏱️ صيانة فورية في معظم الحالات
-📞 تواصل: 01014668055
-"""
+معظم الحالات بتتصلح في نفس اليوم ⚡"""
         keyboard = [
             [InlineKeyboardButton("💬 احجز على واتساب", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='services')]
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_services')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'screen_replacement':
-        message = """
-📲 استبدال الشاشات:
+        msg = """📲 استبدال الشاشات:
 
 ✅ شاشات أصلية عالية الجودة
-✅ استبدال فوري (30-60 دقيقة)
-✅ ضمان 3-6 أشهر
-✅ فحص كامل بعد التركيب
-✅ أسعار منافسة
+⚡ الاستبدال بياخد 30-60 دقيقة بس
+💯 ضمان 3-6 أشهر على الشاشة
+🔍 فحص كامل بعد التركيب
 
-📞 احجز موعدك: 01014668055
-"""
+متقلقش، جهازك هيطلع تمام 💪"""
         keyboard = [
             [InlineKeyboardButton("💬 احجز على واتساب", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='services')]
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_services')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'full_check':
-        message = """
-🔍 خدمة الفحص الشامل:
+        msg = """🔍 الفحص الشامل:
 
-✅ فحص الشاشة والبطارية والكاميرات
-✅ فحص السماعات والمايكروفون
-✅ فحص Face ID / Touch ID
-✅ فحص الواي فاي والبلوتوث
+بنفحص كل حاجة في جهازك:
+شاشة / بطارية / كاميرات / سماعات
+Face ID / واي فاي / بلوتوث / وأكتر
 
-💰 الخدمة مجانية عند الشراء من عندنا!
-⏱️ مدة الفحص: 15-20 دقيقة
-"""
+⏱️ بياخد 15-20 دقيقة
+💰 مجاناً لو اشتريت منا"""
         keyboard = [
-            [InlineKeyboardButton("💬 تواصل معنا", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='services')]
+            [InlineKeyboardButton("💬 تعالى فحصنا", url='https://wa.me/201014668055')],
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_services')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data == 'warranty':
-        message = """
-💯 سياسة الضمان:
+        msg = """💯 الضمان عندنا:
 
-📱 الأجهزة الجديدة: ضمان المصنع الأصلي
-📱 الأجهزة المستعملة: ضمان 3-6 أشهر
-🔧 الشاشات والبطاريات: 3 أشهر
-🎧 السماعات: 6 أشهر
-🔌 الشواحن الأصلية: سنة
+📱 أجهزة مستعملة: 3 لـ 6 أشهر
+🖥️ شاشات وبطاريات: 3 أشهر
+🎧 سماعات: 6 أشهر
+🔌 شواحن أصلية: سنة كاملة
 
-✨ نثق بجودة منتجاتنا ونضمنها لك!
-"""
+بعت وخلص مش أسلوبنا 😊
+أي مشكلة ارجع على طول"""
         keyboard = [
             [InlineKeyboardButton("💬 استفسر على واتساب", url='https://wa.me/201014668055')],
-            [InlineKeyboardButton("🔙 رجوع", callback_data='services')]
+            [InlineKeyboardButton("🔙 رجوع", callback_data='back_services')]
         ]
-        await query.edit_message_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -422,36 +360,31 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await services(update, context)
     elif text == "📍 الموقع والتواصل":
         await location(update, context)
-    elif text == "💬 استفسار" or text == "💬 استفسار آخر":
+    elif text in ["💬 استفسار", "💬 سؤال تاني"]:
         await inquiry_start(update, context)
     elif text == "ℹ️ عن المحل":
         await about(update, context)
-    elif text == "🔙 القائمة الرئيسية":
+    elif text in ["🔙 القائمة الرئيسية", "🏠 الرئيسية"]:
         await start(update, context)
     else:
         await handle_question(update, context)
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(f"Exception while handling an update: {context.error}")
+    logger.error(f"Exception: {context.error}")
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
-
     conv_handler = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex("^💬 استفسار|💬 استفسار آخر$"), inquiry_start)],
-        states={
-            WAITING_FOR_QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_question)]
-        },
+        entry_points=[MessageHandler(filters.Regex("^(💬 استفسار|💬 سؤال تاني)$"), inquiry_start)],
+        states={WAITING_FOR_QUESTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_question)]},
         fallbacks=[CommandHandler("cancel", cancel)]
     )
-
     application.add_handler(conv_handler)
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     application.add_error_handler(error_handler)
-
-    logger.info(f"Bot is starting with {AI_PROVIDER.upper()} AI...")
+    logger.info(f"Bot starting with {AI_PROVIDER.upper()} AI...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
